@@ -11,6 +11,38 @@
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
     </TestPlan>
     <hashTree>
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>false</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
       <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
@@ -145,9 +177,10 @@
           </kg.apc.jmeter.modifiers.FifoPutPostProcessor>
           <hashTree/>
         </hashTree>
-        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Loop to monitor work" enabled="true">
           <boolProp name="LoopController.continue_forever">true</boolProp>
           <stringProp name="LoopController.loops">3</stringProp>
+          <stringProp name="TestPlan.comments">Loop for as many pieces of work we request</stringProp>
         </LoopController>
         <hashTree>
           <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Work Completed &quot;${workCompleted}&quot; Dummy Sampler" enabled="true">
@@ -189,47 +222,6 @@ without actual network activity. This helps debugging tests.</stringProp>
             <stringProp name="FifoName">workerControlSignal</stringProp>
           </kg.apc.jmeter.modifiers.FifoPutPostProcessor>
           <hashTree/>
-        </hashTree>
-        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="While Controller" enabled="false">
-          <stringProp name="TestPlan.comments">ToDo: Figure out how to get this to terminate when all requested work is done</stringProp>
-          <stringProp name="WhileController.condition">${workCompleted}!=&quot;INTERRUPTED&quot;</stringProp>
-        </WhileController>
-        <hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET search (&quot;${workCompleted}&quot; completed) HTTP Request" enabled="false">
-            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
-              <collectionProp name="Arguments.arguments"/>
-            </elementProp>
-            <stringProp name="HTTPSampler.domain"></stringProp>
-            <stringProp name="HTTPSampler.port"></stringProp>
-            <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-            <stringProp name="HTTPSampler.response_timeout"></stringProp>
-            <stringProp name="HTTPSampler.protocol"></stringProp>
-            <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-            <stringProp name="HTTPSampler.path">/search?q=${workCompleted}</stringProp>
-            <stringProp name="HTTPSampler.method">GET</stringProp>
-            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-            <boolProp name="HTTPSampler.monitor">false</boolProp>
-            <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-          </HTTPSamplerProxy>
-          <hashTree>
-            <kg.apc.jmeter.modifiers.FifoPopPreProcessor guiclass="kg.apc.jmeter.modifiers.FifoPopPreProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPopPreProcessor" testname="Wait for Work Completed Inter-Thread PreProcessor" enabled="true">
-              <stringProp name="Timeout"></stringProp>
-              <stringProp name="Variable">workCompleted</stringProp>
-              <stringProp name="FifoName">workCompleteQueue</stringProp>
-            </kg.apc.jmeter.modifiers.FifoPopPreProcessor>
-            <hashTree/>
-            <BSFPostProcessor guiclass="TestBeanGUI" testclass="BSFPostProcessor" testname="Log Info BSF PostProcessor" enabled="true">
-              <stringProp name="TestPlan.comments">Tip: Enable the Log Viewer to see this logged information during a run</stringProp>
-              <stringProp name="filename"></stringProp>
-              <stringProp name="parameters">${__fifoSize(&quot;workCompleteQueue&quot;)}</stringProp>
-              <stringProp name="script">log.info(Label + &quot; - Queue size: &quot; + args[0]);</stringProp>
-              <stringProp name="scriptLanguage">javascript</stringProp>
-            </BSFPostProcessor>
-            <hashTree/>
-          </hashTree>
         </hashTree>
       </hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Worker Thread Group" enabled="true">
@@ -290,7 +282,7 @@ without actual network activity. This helps debugging tests.</stringProp>
             <stringProp name="TestPlan.comments">ToRes: Why does this loop cause the stack overflows?</stringProp>
           </LoopController>
           <hashTree/>
-          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="On Control Signal" enabled="true">
+          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="On Control Signal &quot;${controlSignal}&quot;" enabled="true">
             <boolProp name="WAITING">false</boolProp>
             <boolProp name="SUCCESFULL">true</boolProp>
             <stringProp name="RESPONSE_CODE">200</stringProp>
@@ -325,7 +317,7 @@ without actual network activity. This helps debugging tests.</stringProp>
           <stringProp name="WhileController.condition">&quot;${workRequested}&quot; !==&quot;INTERRUPTED&quot;</stringProp>
         </WhileController>
         <hashTree>
-          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Work Request &quot;${workRequested}&apos;" enabled="true">
+          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Work Request &quot;${workRequested}&quot;" enabled="true">
             <boolProp name="WAITING">false</boolProp>
             <boolProp name="SUCCESFULL">true</boolProp>
             <stringProp name="RESPONSE_CODE">200</stringProp>
