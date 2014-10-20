@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="2.6" jmeter="2.11 r1554548">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Threads Sharing Cookie" enabled="true">
+      <stringProp name="TestPlan.comments">Demonstrates how to pass cookie from one thread to another</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>true</xml>
+            <fieldNames>false</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Main Thread" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">2</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <longProp name="ThreadGroup.start_time">1335549679000</longProp>
+        <longProp name="ThreadGroup.end_time">1335549679000</longProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager" enabled="true">
+          <collectionProp name="CookieManager.cookies"/>
+          <stringProp name="TestPlan.comments">This manager will maintain the cookies across samplers for this thread group</stringProp>
+          <boolProp name="CookieManager.clearEachIteration">false</boolProp>
+        </CookieManager>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request site with Set-Cookie" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">www.google.com</stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path"></stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Get First Cookie BeanShell PostProcessor" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">import org.apache.jmeter.samplers.Sampler;
+import org.apache.jmeter.protocol.http.control.CookieManager; 
+import org.apache.jmeter.protocol.http.control.Cookie; 
+import org.apache.jmeter.util.JMeterUtils;
+
+Sampler sampler = ctx.getCurrentSampler();
+//log.info(&quot;Sampler: &quot; + sampler);
+
+CookieManager manager = sampler.getCookieManager(); 
+//log.info(&quot;Cookie Manager: &quot; + manager);
+
+// This assumes we&apos;re wanting to modify the first cookie, you could iterate the cookies and say search by name here as well
+Cookie firstCookie = manager.get(0);
+
+//log.info(&quot;Entire Cookie: &quot; + firstCookie.toString());
+
+// The __threadNum var is not 0 based but 1 based - where we&apos;ll use that to pass threadNum over to worker thread we need to be consistent here, hence the +1
+var jmeterThreadNum = ctx.getThreadNum() + 1;
+
+JMeterUtils.setProperty(&quot;cookieDomain&quot; + jmeterThreadNum, firstCookie.getDomain());
+JMeterUtils.setProperty(&quot;cookiePath&quot; + jmeterThreadNum, firstCookie.getPath());
+JMeterUtils.setProperty(&quot;cookieName&quot; + jmeterThreadNum, firstCookie.getName());
+JMeterUtils.setProperty(&quot;cookieValue&quot; + jmeterThreadNum, firstCookie.getValue());
+JMeterUtils.setProperty(&quot;cookieSecure&quot; + jmeterThreadNum, firstCookie.getSecure().toString());
+JMeterUtils.setProperty(&quot;cookieExpires&quot; + jmeterThreadNum, firstCookie.getExpires().toString());
+</stringProp>
+          </BeanShellPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <DebugSampler guiclass="TestBeanGUI" testclass="DebugSampler" testname="Debug Sampler" enabled="true">
+          <boolProp name="displayJMeterProperties">true</boolProp>
+          <boolProp name="displayJMeterVariables">false</boolProp>
+          <boolProp name="displaySystemProperties">false</boolProp>
+        </DebugSampler>
+        <hashTree/>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Send cookie loop" enabled="true">
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+          <stringProp name="LoopController.loops">2</stringProp>
+          <stringProp name="TestPlan.comments">Each time through the loop we message a worker thread to do some work</stringProp>
+        </LoopController>
+        <hashTree>
+          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Send Cookie" enabled="true">
+            <stringProp name="TestPlan.comments">You need a sampler to hang the inter-thread postproc off of</stringProp>
+            <boolProp name="WAITING">true</boolProp>
+            <boolProp name="SUCCESFULL">true</boolProp>
+            <stringProp name="RESPONSE_CODE">200</stringProp>
+            <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+            <stringProp name="REQUEST_DATA">Sending cookie to worker thread pool</stringProp>
+            <stringProp name="RESPONSE_DATA"></stringProp>
+            <stringProp name="RESPONSE_TIME"></stringProp>
+            <stringProp name="LATENCY"></stringProp>
+          </kg.apc.jmeter.samplers.DummySampler>
+          <hashTree>
+            <kg.apc.jmeter.modifiers.FifoPutPostProcessor guiclass="kg.apc.jmeter.modifiers.FifoPutPostProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPutPostProcessor" testname="Send cookie number to thread pool" enabled="true">
+              <stringProp name="TestPlan.comments">Send this thread number to thread pool, that value is used to reference the cookie for this thread. The cookie data is stored in jmeter properties.</stringProp>
+              <stringProp name="Value">${__threadNum}</stringProp>
+              <stringProp name="FifoName">cookieQueue</stringProp>
+            </kg.apc.jmeter.modifiers.FifoPutPostProcessor>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Worker Thread Pool" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">4</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <longProp name="ThreadGroup.start_time">1335549698000</longProp>
+        <longProp name="ThreadGroup.end_time">1335549698000</longProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager" enabled="true">
+          <collectionProp name="CookieManager.cookies"/>
+          <stringProp name="TestPlan.comments">This manager will maintain the cookies across samplers for this thread group</stringProp>
+          <boolProp name="CookieManager.clearEachIteration">false</boolProp>
+        </CookieManager>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request with passed Cookie" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">www.google.com</stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path"></stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="TestPlan.comments">The BeanShell PreProcessor on this Sampler sets the passed cookie</stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <kg.apc.jmeter.modifiers.FifoPopPreProcessor guiclass="kg.apc.jmeter.modifiers.FifoPopPreProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPopPreProcessor" testname="Wait on cookie number" enabled="true">
+            <stringProp name="Timeout">60</stringProp>
+            <stringProp name="TestPlan.comments">Here&apos;s how we wait for cookie number, we&apos;ll pull the cookie details from jmeter properties with this number in the names</stringProp>
+            <stringProp name="Variable">cookieNum</stringProp>
+            <stringProp name="FifoName">cookieQueue</stringProp>
+          </kg.apc.jmeter.modifiers.FifoPopPreProcessor>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Add New Cookie BeanShell PreProcessor" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters">${cookieNum}</stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import org.apache.jmeter.protocol.http.control.CookieManager; 
+import org.apache.jmeter.protocol.http.control.Cookie; 
+import org.apache.jmeter.util.JMeterUtils;
+
+CookieManager manager = sampler.getCookieManager(); 
+//log.debug(&quot;Number of Cookies Before: &quot; + manager.getCookieCount());
+
+var cookieDomain = JMeterUtils.getProperty(&quot;cookieDomain&quot; + bsh.args[0]);
+//log.info(&quot;cookieDomain: &quot; + cookieDomain);
+var cookiePath = JMeterUtils.getProperty(&quot;cookiePath&quot; + bsh.args[0]);
+//log.info(&quot;cookiePath: &quot; + cookiePath);
+var cookieName = JMeterUtils.getProperty(&quot;cookieName&quot; + bsh.args[0]);
+//log.info(&quot;cookieName: &quot; + cookieName);
+var cookieValue = JMeterUtils.getProperty(&quot;cookieValue&quot; + bsh.args[0]);
+//log.info(&quot;cookieValue: &quot; + cookieValue);
+var cookieSecure = JMeterUtils.getProperty(&quot;cookieSecure&quot; + bsh.args[0]);
+//log.info(&quot;cookieSecure: &quot; + cookieSecure);
+var cookieExpires = JMeterUtils.getProperty(&quot;cookieExpires&quot; + bsh.args[0]);
+//log.info(&quot;cookieExpires: &quot; + cookieExpires);
+
+Cookie cookie = new Cookie(cookieName, cookieValue, cookieDomain, cookiePath, Boolean.parseBoolean(cookieSecure), Integer.parseInt(cookieExpires));
+
+manager.add(cookie);
+
+//log.debug(Label + &quot; - Number of Cookies After: &quot; + manager.getCookieCount());
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
