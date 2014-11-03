@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="2.6" jmeter="2.11 r1554548">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Users and Worker Threads" enabled="true">
+      <stringProp name="TestPlan.comments">In this sample a main thread group sends work requests (URLs to retrieve) to a worker thread group.
+Additionally there is plumbing so that the main thread can signal the worker threads to shutdown gracefully (otherwise they would run until test is stopped).</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="numUsers" elementType="Argument">
+            <stringProp name="Argument.name">numUsers</stringProp>
+            <stringProp name="Argument.value">4</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.desc">Number of threads in the Main Thread Group</stringProp>
+          </elementProp>
+          <elementProp name="numWorkersPerUser" elementType="Argument">
+            <stringProp name="Argument.name">numWorkersPerUser</stringProp>
+            <stringProp name="Argument.value">4</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.desc">Number of threads in Worker Thread Group per user in Main Thread Group</stringProp>
+          </elementProp>
+          <elementProp name="numWorkerThreads" elementType="Argument">
+            <stringProp name="Argument.name">numWorkerThreads</stringProp>
+            <stringProp name="Argument.value">17</stringProp>
+            <stringProp name="Argument.desc">Hand calculated here: numUsers * numWorkersPerUser + 1 (for signal listener thread)</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </Arguments>
+      <hashTree/>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>false</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+          <collectionProp name="Arguments.arguments"/>
+        </elementProp>
+        <stringProp name="HTTPSampler.domain">www.google.com</stringProp>
+        <stringProp name="HTTPSampler.port"></stringProp>
+        <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+        <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        <stringProp name="HTTPSampler.protocol">https</stringProp>
+        <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+        <stringProp name="HTTPSampler.path"></stringProp>
+        <stringProp name="TestPlan.comments">By default all HTTP samplers will use these defaults. DRY.</stringProp>
+        <stringProp name="HTTPSampler.concurrentPool">4</stringProp>
+      </ConfigTestElement>
+      <hashTree/>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Main Thread Group" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${numUsers}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <longProp name="ThreadGroup.start_time">1381265134000</longProp>
+        <longProp name="ThreadGroup.end_time">1381265134000</longProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>false</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+        <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Request Work from Thread #${__threadNum}" enabled="true">
+          <stringProp name="TestPlan.comments">You can put the Inter-Thread Procs in with no parent sampler, but there&apos;s no indication it runs in the Results so I use this Dummy Sampler for clarity</stringProp>
+          <boolProp name="WAITING">false</boolProp>
+          <boolProp name="SUCCESFULL">true</boolProp>
+          <stringProp name="RESPONSE_CODE">200</stringProp>
+          <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+          <stringProp name="REQUEST_DATA">Dummy Sampler used to hang inter-thread PostProcessor off of. That postproc will request the work.</stringProp>
+          <stringProp name="RESPONSE_DATA">Dummy Sampler used to hang inter-thread PostProcessor off of. That postproc will request the work.</stringProp>
+          <stringProp name="RESPONSE_TIME"></stringProp>
+          <stringProp name="LATENCY"></stringProp>
+        </kg.apc.jmeter.samplers.DummySampler>
+        <hashTree>
+          <kg.apc.jmeter.modifiers.FifoPutPostProcessor guiclass="kg.apc.jmeter.modifiers.FifoPutPostProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPutPostProcessor" testname="Request Work Inter-Thread PreProcessor" enabled="true">
+            <stringProp name="Value">maps</stringProp>
+            <stringProp name="FifoName">workRequestQueue${__threadNum}</stringProp>
+            <stringProp name="TestPlan.comments">Signals Worker Thread Group to get to work on maps</stringProp>
+          </kg.apc.jmeter.modifiers.FifoPutPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Request Work from Thread #${__threadNum}" enabled="true">
+          <boolProp name="WAITING">false</boolProp>
+          <boolProp name="SUCCESFULL">true</boolProp>
+          <stringProp name="RESPONSE_CODE">200</stringProp>
+          <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+          <stringProp name="REQUEST_DATA">Dummy Sampler used to hang inter-thread PostProcessor off of. That postproc will request the work.</stringProp>
+          <stringProp name="RESPONSE_DATA">Dummy Sampler used to hang inter-thread PostProcessor off of. That postproc will request the work.</stringProp>
+          <stringProp name="RESPONSE_TIME"></stringProp>
+          <stringProp name="LATENCY"></stringProp>
+          <stringProp name="TestPlan.comments">You can put the Inter-Thread Procs in with no parent sampler, but there&apos;s no indication it runs in the Results so I use this Dummy Sampler for clarity</stringProp>
+        </kg.apc.jmeter.samplers.DummySampler>
+        <hashTree>
+          <kg.apc.jmeter.modifiers.FifoPutPostProcessor guiclass="kg.apc.jmeter.modifiers.FifoPutPostProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPutPostProcessor" testname="Request Work Inter-Thread PreProcessor" enabled="true">
+            <stringProp name="Value">imghp</stringProp>
+            <stringProp name="FifoName">workRequestQueue${__threadNum}</stringProp>
+            <stringProp name="TestPlan.comments">Signals Worker Thread Group to get to work on imghp</stringProp>
+          </kg.apc.jmeter.modifiers.FifoPutPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Request Work from Thread #${__threadNum}" enabled="true">
+          <boolProp name="WAITING">false</boolProp>
+          <boolProp name="SUCCESFULL">true</boolProp>
+          <stringProp name="RESPONSE_CODE">200</stringProp>
+          <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+          <stringProp name="REQUEST_DATA">Dummy Sampler used to hang inter-thread PostProcessor off of. That postproc will request the work.</stringProp>
+          <stringProp name="RESPONSE_DATA">Dummy Sampler used to hang inter-thread PostProcessor off of. That postproc will request the work.</stringProp>
+          <stringProp name="RESPONSE_TIME"></stringProp>
+          <stringProp name="LATENCY"></stringProp>
+          <stringProp name="TestPlan.comments">You can put the Inter-Thread Procs in with no parent sampler, but there&apos;s no indication it runs in the Results so I use this Dummy Sampler for clarity</stringProp>
+        </kg.apc.jmeter.samplers.DummySampler>
+        <hashTree>
+          <kg.apc.jmeter.modifiers.FifoPutPostProcessor guiclass="kg.apc.jmeter.modifiers.FifoPutPostProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPutPostProcessor" testname="Request Work Inter-Thread PreProcessor" enabled="true">
+            <stringProp name="Value">services/</stringProp>
+            <stringProp name="FifoName">workRequestQueue${__threadNum}</stringProp>
+            <stringProp name="TestPlan.comments">Signals Worker Thread Group to get to work on services</stringProp>
+          </kg.apc.jmeter.modifiers.FifoPutPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Loop to monitor work" enabled="true">
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+          <stringProp name="LoopController.loops">3</stringProp>
+          <stringProp name="TestPlan.comments">Loop for as many pieces of work we request</stringProp>
+        </LoopController>
+        <hashTree>
+          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Work Completed &quot;${workCompleted}&quot; for Thread #${__threadNum}" enabled="true">
+            <boolProp name="WAITING">false</boolProp>
+            <boolProp name="SUCCESFULL">true</boolProp>
+            <stringProp name="RESPONSE_CODE">200</stringProp>
+            <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+            <stringProp name="REQUEST_DATA"></stringProp>
+            <stringProp name="RESPONSE_DATA"></stringProp>
+            <stringProp name="RESPONSE_TIME"></stringProp>
+            <stringProp name="LATENCY"></stringProp>
+          </kg.apc.jmeter.samplers.DummySampler>
+          <hashTree>
+            <kg.apc.jmeter.modifiers.FifoPopPreProcessor guiclass="kg.apc.jmeter.modifiers.FifoPopPreProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPopPreProcessor" testname="Wait for Work Completed Inter-Thread PreProcessor" enabled="true">
+              <stringProp name="Timeout"></stringProp>
+              <stringProp name="Variable">workCompleted</stringProp>
+              <stringProp name="FifoName">workCompleteQueue${__threadNum}</stringProp>
+            </kg.apc.jmeter.modifiers.FifoPopPreProcessor>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+        <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+          <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+        </GenericController>
+        <hashTree>
+          <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+            <intProp name="groupSize">0</intProp>
+            <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+          </SyncTimer>
+          <hashTree/>
+          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Synching Dummy Sampler" enabled="true">
+            <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+            <boolProp name="WAITING">false</boolProp>
+            <boolProp name="SUCCESFULL">true</boolProp>
+            <stringProp name="RESPONSE_CODE">200</stringProp>
+            <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+            <stringProp name="REQUEST_DATA"></stringProp>
+            <stringProp name="RESPONSE_DATA"></stringProp>
+            <stringProp name="RESPONSE_TIME"></stringProp>
+            <stringProp name="LATENCY"></stringProp>
+          </kg.apc.jmeter.samplers.DummySampler>
+          <hashTree/>
+        </hashTree>
+        <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If first thread, signal workers to stop" enabled="true">
+          <stringProp name="IfController.condition">${__threadNum}==1</stringProp>
+          <boolProp name="IfController.evaluateAll">false</boolProp>
+        </IfController>
+        <hashTree>
+          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Signal Workers Stop" enabled="true">
+            <boolProp name="WAITING">false</boolProp>
+            <boolProp name="SUCCESFULL">true</boolProp>
+            <stringProp name="RESPONSE_CODE">200</stringProp>
+            <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+            <stringProp name="REQUEST_DATA">Dummy Sampler used to hang inter-thread PostProcessor off of. That postproc will signal to stop.</stringProp>
+            <stringProp name="RESPONSE_DATA">Dummy Sampler used to hang inter-thread PostProcessor off of. That postproc will signal to stop.</stringProp>
+            <stringProp name="RESPONSE_TIME"></stringProp>
+            <stringProp name="LATENCY"></stringProp>
+            <stringProp name="TestPlan.comments">You can put the Inter-Thread Procs in with no parent sampler, but there&apos;s no indication it runs in the Results so I use this Dummy Sampler for clarity</stringProp>
+          </kg.apc.jmeter.samplers.DummySampler>
+          <hashTree>
+            <kg.apc.jmeter.modifiers.FifoPutPostProcessor guiclass="kg.apc.jmeter.modifiers.FifoPutPostProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPutPostProcessor" testname="Signal Workers Stop Inter-Thread Communication PostProcessor" enabled="true">
+              <stringProp name="Value">STOP</stringProp>
+              <stringProp name="FifoName">workerControlSignal</stringProp>
+            </kg.apc.jmeter.modifiers.FifoPutPostProcessor>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Worker Thread Group" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${numWorkerThreads}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <longProp name="ThreadGroup.start_time">1381258275000</longProp>
+        <longProp name="ThreadGroup.end_time">1381258275000</longProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>false</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+        <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If First Thread, Listen for Control Signals" enabled="true">
+          <stringProp name="IfController.condition">${__threadNum}==1</stringProp>
+          <boolProp name="IfController.evaluateAll">false</boolProp>
+        </IfController>
+        <hashTree>
+          <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="false">
+            <boolProp name="LoopController.continue_forever">true</boolProp>
+            <intProp name="LoopController.loops">-1</intProp>
+            <stringProp name="TestPlan.comments">ToRes: Why does this loop cause the stack overflows?</stringProp>
+          </LoopController>
+          <hashTree/>
+          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="On Control Signal &quot;${controlSignal}&quot;" enabled="true">
+            <boolProp name="WAITING">false</boolProp>
+            <boolProp name="SUCCESFULL">true</boolProp>
+            <stringProp name="RESPONSE_CODE">200</stringProp>
+            <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+            <stringProp name="REQUEST_DATA">Sampler to hang Inter-Thread Communication PreProcessor off of</stringProp>
+            <stringProp name="RESPONSE_DATA">Sampler to hang Inter-Thread Communication PreProcessor off of</stringProp>
+            <stringProp name="RESPONSE_TIME">0</stringProp>
+            <stringProp name="LATENCY">0</stringProp>
+            <stringProp name="TestPlan.comments">You can put the Inter-Thread Procs in with no parent sampler, but there&apos;s no indication it runs in the Results so I use this Dummy Sampler for clarity</stringProp>
+          </kg.apc.jmeter.samplers.DummySampler>
+          <hashTree>
+            <kg.apc.jmeter.modifiers.FifoPopPreProcessor guiclass="kg.apc.jmeter.modifiers.FifoPopPreProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPopPreProcessor" testname="Listen for Control Signal Inter-Thread Communication PreProcessor" enabled="true">
+              <stringProp name="Timeout"></stringProp>
+              <stringProp name="Variable">controlSignal</stringProp>
+              <stringProp name="FifoName">workerControlSignal</stringProp>
+            </kg.apc.jmeter.modifiers.FifoPopPreProcessor>
+            <hashTree/>
+          </hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Stop Signal" enabled="true">
+            <stringProp name="IfController.condition">&quot;${controlSignal}&quot;===&quot;STOP&quot;</stringProp>
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+          </IfController>
+          <hashTree>
+            <TestAction guiclass="TestActionGui" testclass="TestAction" testname="Stop All Threads" enabled="true">
+              <intProp name="ActionProcessor.action">2</intProp>
+              <intProp name="ActionProcessor.target">2</intProp>
+              <stringProp name="ActionProcessor.duration"></stringProp>
+            </TestAction>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+        <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="Determine master thread number" enabled="true">
+          <stringProp name="BeanShellSampler.query">
+// The __threadNum var is not 0 based but 1 based, hence the +1
+var threadNum = ctx.getThreadNum()+1;
+log.info(&quot;threadNum: &quot; + threadNum);
+
+var numWorkersPerUser = Integer.parseInt(vars.get(&quot;numWorkersPerUser&quot;));
+
+var masterThreadNum = (threadNum / numWorkersPerUser) + 1;
+log.info(&quot;I&apos;ll do work for main threadNum: &quot; + masterThreadNum);
+
+vars.put(&quot;masterThreadNum&quot;, masterThreadNum.toString());</stringProp>
+          <stringProp name="BeanShellSampler.filename"></stringProp>
+          <stringProp name="BeanShellSampler.parameters"></stringProp>
+          <boolProp name="BeanShellSampler.resetInterpreter">false</boolProp>
+        </BeanShellSampler>
+        <hashTree/>
+        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="While Threads Not Interrupted" enabled="true">
+          <stringProp name="WhileController.condition">&quot;${workRequested}&quot; !==&quot;INTERRUPTED&quot;</stringProp>
+        </WhileController>
+        <hashTree>
+          <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Received Work Request &quot;${workRequested}&quot; from Thread #${masterThreadNum}" enabled="true">
+            <boolProp name="WAITING">false</boolProp>
+            <boolProp name="SUCCESFULL">true</boolProp>
+            <stringProp name="RESPONSE_CODE">200</stringProp>
+            <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+            <stringProp name="REQUEST_DATA">Dummy Sampler used to hang inter-thread PreProcessor off of. That preproc will wait for the work.</stringProp>
+            <stringProp name="RESPONSE_DATA">Dummy Sampler used to hang inter-thread PreProcessor off of. That preproc will wait for the work.</stringProp>
+            <stringProp name="RESPONSE_TIME"></stringProp>
+            <stringProp name="LATENCY"></stringProp>
+            <stringProp name="TestPlan.comments">You can put the Inter-Thread Procs in with no parent sampler, but there&apos;s no indication it runs in the Results so I use this Dummy Sampler for clarity</stringProp>
+          </kg.apc.jmeter.samplers.DummySampler>
+          <hashTree>
+            <kg.apc.jmeter.modifiers.FifoPopPreProcessor guiclass="kg.apc.jmeter.modifiers.FifoPopPreProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPopPreProcessor" testname="Wait for Work Inter-Thread PreProcessor" enabled="true">
+              <stringProp name="Timeout"></stringProp>
+              <stringProp name="Variable">workRequested</stringProp>
+              <stringProp name="FifoName">workRequestQueue${masterThreadNum}</stringProp>
+            </kg.apc.jmeter.modifiers.FifoPopPreProcessor>
+            <hashTree/>
+          </hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Not Interrupted" enabled="true">
+            <stringProp name="TestPlan.comments">When the STOP signal is sent to first thread Test Action will stop all threads and Inter-Thread PreProc sets workRequested to INTERRUPTED</stringProp>
+            <stringProp name="IfController.condition">&quot;${workRequested}&quot; !==&quot;INTERRUPTED&quot;</stringProp>
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+          </IfController>
+          <hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Do work for &quot;${workRequested}&quot; from Thread #${masterThreadNum}" enabled="true">
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+                <collectionProp name="Arguments.arguments"/>
+              </elementProp>
+              <stringProp name="HTTPSampler.domain"></stringProp>
+              <stringProp name="HTTPSampler.port"></stringProp>
+              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+              <stringProp name="HTTPSampler.response_timeout"></stringProp>
+              <stringProp name="HTTPSampler.protocol"></stringProp>
+              <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+              <stringProp name="HTTPSampler.path">/${workRequested}</stringProp>
+              <stringProp name="HTTPSampler.method">GET</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+              <boolProp name="HTTPSampler.monitor">false</boolProp>
+              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+              <stringProp name="TestPlan.comments">Gets the url passed via workRequestQueue (the &quot;work&quot; is to get the passed path)		</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <kg.apc.jmeter.modifiers.FifoPutPostProcessor guiclass="kg.apc.jmeter.modifiers.FifoPutPostProcessorGui" testclass="kg.apc.jmeter.modifiers.FifoPutPostProcessor" testname="Signal Work Completed Inter-Thread PostProcessor" enabled="true">
+                <stringProp name="Value">${workRequested}</stringProp>
+                <stringProp name="FifoName">workCompleteQueue${masterThreadNum}</stringProp>
+              </kg.apc.jmeter.modifiers.FifoPutPostProcessor>
+              <hashTree/>
+            </hashTree>
+          </hashTree>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
