@@ -16,7 +16,7 @@ Additionally there is plumbing so that the main thread can signal the worker thr
         <collectionProp name="Arguments.arguments">
           <elementProp name="numUsers" elementType="Argument">
             <stringProp name="Argument.name">numUsers</stringProp>
-            <stringProp name="Argument.value">4</stringProp>
+            <stringProp name="Argument.value">2</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
             <stringProp name="Argument.desc">Number of threads in the Main Thread Group</stringProp>
           </elementProp>
@@ -28,7 +28,7 @@ Additionally there is plumbing so that the main thread can signal the worker thr
           </elementProp>
           <elementProp name="numWorkerThreads" elementType="Argument">
             <stringProp name="Argument.name">numWorkerThreads</stringProp>
-            <stringProp name="Argument.value">17</stringProp>
+            <stringProp name="Argument.value">9</stringProp>
             <stringProp name="Argument.desc">Hand calculated here: numUsers * numWorkersPerUser + 1 (for signal listener thread)</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
