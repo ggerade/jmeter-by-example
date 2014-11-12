@@ -82,7 +82,7 @@ Additionally there is plumbing so that the main thread can signal the worker thr
         <stringProp name="HTTPSampler.concurrentPool">4</stringProp>
       </ConfigTestElement>
       <hashTree/>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Main Thread Group" enabled="true">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Master Thread Group" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
@@ -413,13 +413,11 @@ vars.put(&quot;masterThreadNum&quot;, masterThreadNum.toString());</stringProp>
             <stringProp name="TestPlan.comments">Gets the url passed via workRequestQueue (the &quot;work&quot; is to get the passed path)		</stringProp>
           </HTTPSamplerProxy>
           <hashTree/>
-          <GaussianRandomTimer guiclass="GaussianRandomTimerGui" testclass="GaussianRandomTimer" testname="Gaussian Random Timer" enabled="false">
-            <stringProp name="ConstantTimer.delay">0</stringProp>
-            <stringProp name="RandomTimer.range">500</stringProp>
-          </GaussianRandomTimer>
-          <hashTree/>
         </hashTree>
-        <SwitchController guiclass="SwitchControllerGui" testclass="SwitchController" testname="Switch Controller" enabled="true">
+        <SwitchController guiclass="SwitchControllerGui" testclass="SwitchController" testname="Switch for thread bank sync timers" enabled="true">
+          <stringProp name="TestPlan.comments">This switch introduces a Sync Timer for each thread tied to a masterThreadNum. 
+This way workers for a master all sync, but indendently of the other threads in this group.
+This approach is hard to scale as you need a separate switch entry for as many master threads you plan to run.</stringProp>
           <stringProp name="SwitchController.value">${masterThreadNum}</stringProp>
         </SwitchController>
         <hashTree>
