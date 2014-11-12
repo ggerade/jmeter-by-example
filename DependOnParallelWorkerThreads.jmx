@@ -2,7 +2,7 @@
 <jmeterTestPlan version="1.2" properties="2.6" jmeter="2.11 r1554548">
   <hashTree>
     <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Depend on Parallel Worker Threads" enabled="true">
-      <stringProp name="TestPlan.comments"></stringProp>
+      <stringProp name="TestPlan.comments">Example of master user threads sending out work to workers and then waiting for all workers to complete before moving on</stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
@@ -15,20 +15,26 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="numUsers" elementType="Argument">
             <stringProp name="Argument.name">numUsers</stringProp>
-            <stringProp name="Argument.value">20</stringProp>
+            <stringProp name="Argument.value">100</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
             <stringProp name="Argument.desc">Number of threads in the Master Thread Group</stringProp>
           </elementProp>
           <elementProp name="numWorkersPerUser" elementType="Argument">
             <stringProp name="Argument.name">numWorkersPerUser</stringProp>
-            <stringProp name="Argument.value">5</stringProp>
+            <stringProp name="Argument.value">8</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
             <stringProp name="Argument.desc">Number of threads in Worker Thread Group per user in Main Thread Group</stringProp>
           </elementProp>
           <elementProp name="numWorkerThreads" elementType="Argument">
             <stringProp name="Argument.name">numWorkerThreads</stringProp>
-            <stringProp name="Argument.value">100</stringProp>
+            <stringProp name="Argument.value">800</stringProp>
             <stringProp name="Argument.desc">Hand calculated here: numUsers * numWorkersPerUser</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="masterLoopCount" elementType="Argument">
+            <stringProp name="Argument.name">masterLoopCount</stringProp>
+            <stringProp name="Argument.value">3</stringProp>
+            <stringProp name="Argument.desc">How many times the master/user should request work</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
@@ -144,7 +150,7 @@ if (numUsers*numWorkersPerUser != numWorkerThreads) {
         <hashTree/>
         <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Master Loop for repeating work requests/wait for complete" enabled="true">
           <boolProp name="LoopController.continue_forever">true</boolProp>
-          <stringProp name="LoopController.loops">3</stringProp>
+          <stringProp name="LoopController.loops">${masterLoopCount}</stringProp>
         </LoopController>
         <hashTree>
           <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Request work loop, one for each worker" enabled="true">
@@ -416,6 +422,1766 @@ This approach is hard to scale as you need a separate switch entry for as many m
             </SyncTimer>
             <hashTree/>
             <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set 2 Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
+              <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
+              <boolProp name="WAITING">false</boolProp>
+              <boolProp name="SUCCESFULL">true</boolProp>
+              <stringProp name="RESPONSE_CODE">200</stringProp>
+              <stringProp name="RESPONSE_MESSAGE">OK</stringProp>
+              <stringProp name="REQUEST_DATA"></stringProp>
+              <stringProp name="RESPONSE_DATA"></stringProp>
+              <stringProp name="RESPONSE_TIME"></stringProp>
+              <stringProp name="LATENCY"></stringProp>
+            </kg.apc.jmeter.samplers.DummySampler>
+            <hashTree/>
+          </hashTree>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Synching Controller" enabled="true">
+            <stringProp name="TestPlan.comments">The Synch Timer herein will cause all threads to synch here before moving on to next controller</stringProp>
+          </GenericController>
+          <hashTree>
+            <SyncTimer guiclass="TestBeanGUI" testclass="SyncTimer" testname="Synchronizing Timer" enabled="true">
+              <stringProp name="groupSize">${numWorkersPerUser}</stringProp>
+              <stringProp name="TestPlan.comments">Note: Affects all samplers in parent controller</stringProp>
+            </SyncTimer>
+            <hashTree/>
+            <kg.apc.jmeter.samplers.DummySampler guiclass="kg.apc.jmeter.samplers.DummySamplerGui" testclass="kg.apc.jmeter.samplers.DummySampler" testname="Worker Set N Synching Dummy Sampler" enabled="true">
               <stringProp name="TestPlan.comments">Needed to synch all threads as they come through the parent controller</stringProp>
               <boolProp name="WAITING">false</boolProp>
               <boolProp name="SUCCESFULL">true</boolProp>
